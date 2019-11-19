@@ -1,8 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-set -x
-
 # Reads a list from plugin config into a global result array
 # Returns success if values were read
 plugin_read_list_into_result() {
