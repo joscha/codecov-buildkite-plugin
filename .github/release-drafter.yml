@@ -11,6 +11,6 @@ template: |
   ```diff
   steps:
     - plugins:
-  -     detect-clowns#$PREVIOUS_TAG: ~
-  +     detect-clowns#TODO: ~
+  -     joscha/docker-codecov#$PREVIOUS_TAG: ~
+  +     joscha/docker-codecov#TODO: ~
   ```
