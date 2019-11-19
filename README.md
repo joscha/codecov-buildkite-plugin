@@ -9,7 +9,7 @@ It contains a [post-command hook](hooks/command), and [tests](tests/command.bats
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v1.0.0: ~
+      - joscha/docker-codecov#v1.0.0: ~
 ```
 
 ## Tests
