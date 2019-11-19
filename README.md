@@ -1,15 +1,15 @@
 # Clown Detection Buildkite Plugin
 
-An example [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) for detecting whether your code has any clowns in it.
+An [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) for running [Codecov](https://docs.codecov.io/docs/testing-with-docker).
 
-It contains a [command hook](hooks/command), and [tests](tests/command.bats) using [plugin-tester](https://github.com/buildkite-plugins/plugin-tester).
+It contains a [post-command hook](hooks/command), and [tests](tests/command.bats) using [plugin-tester](https://github.com/buildkite-plugins/plugin-tester).
 
 ## Example
 
 ```yml
 steps:
   - plugins:
-      - detect-clowns#v2.0.0: ~
+      - joscha/codecov#v1.0.0: ~
 ```
 
 ## Tests

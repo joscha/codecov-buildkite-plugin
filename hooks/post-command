@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+
+set -x
+
+main() {
+  pushd "${BUILDKITE_BUILD_CHECKOUT_PATH}" >/dev/null
+  local ci_env
+  ci_env=$(bash <(curl -s https://codecov.io/env))
+  docker run \
+      $ci_env \
+      --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
+      --workdir=/workdir \
+      --volume=$(pwd):/workdir \
+      -it \
+      --rm \
+      buildpack-deps:jessie-scm \
+      bash -c 'bash <(curl -s https://codecov.io/bash)'
+
+  popd >/dev/null
+}
+
+main "$@"
