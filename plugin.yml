@@ -5,5 +5,7 @@ requirements:
   - bash
   - docker
 configuration:
-  properties: {}
+  properties:
+    args:
+      type: array
   additionalProperties: false
