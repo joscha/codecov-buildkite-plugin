@@ -1,7 +1,9 @@
 name: Codecov
 description: Runs the codecov bash reporter over your code
 author: https://github.com/joscha
-requirements: []
+requirements:
+  - bash
+  - docker
 configuration:
   properties: {}
   additionalProperties: false
