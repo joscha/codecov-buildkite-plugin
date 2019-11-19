@@ -6,7 +6,7 @@ steps:
   - label: ":sparkles: lint"
     plugins:
       - plugin-linter#v2.0.0:
-          id: detect-clowns
+          id: joscha/docker-codecov
   - label: ":shell: Shellcheck"
     plugins:
       - shellcheck#v1.1.2:
