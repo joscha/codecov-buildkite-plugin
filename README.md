@@ -1,4 +1,4 @@
-# Clown Detection Buildkite Plugin
+# Docker Codecov Buildkite Plugin
 
 An [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) for running [Codecov](https://docs.codecov.io/docs/testing-with-docker).
 
