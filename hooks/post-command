@@ -29,9 +29,13 @@ main() {
   pushd "${BUILDKITE_BUILD_CHECKOUT_PATH}" >/dev/null
 
   local args=()
+  local force_zero_exit=" || true"
   if plugin_read_list_into_result BUILDKITE_PLUGIN_CODECOV_ARGS ; then
     for arg in "${result[@]}" ; do
-      args+=("$arg")
+      args+=("${arg}")
+      if [[ "${arg}" == "-Z" ]]; then
+        force_zero_exit=""
+      fi
     done
   fi
 
@@ -45,7 +49,7 @@ main() {
       -it \
       --rm \
       buildpack-deps:jessie-scm \
-      bash -c "bash <(curl -s https://codecov.io/bash) ${args[*]:-}"
+      bash -c "bash <(curl -s https://codecov.io/bash) ${args[*]:-}${force_zero_exit}"
 
   popd >/dev/null
 }
