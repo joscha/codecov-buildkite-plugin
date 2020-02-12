@@ -9,14 +9,14 @@ It contains a [post-command hook](hooks/command), and [tests](tests/command.bats
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v2.1.2: ~
+      - joscha/codecov#v2.1.3: ~
 ```
 
 The shell option can be used to forward parameters to the codecov invocation.
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v2.1.2:
+      - joscha/codecov#v2.1.3:
           args:
             - '-v'
             - '-F my_flag'
