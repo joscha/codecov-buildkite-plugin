@@ -29,18 +29,20 @@ main() {
   pushd "${BUILDKITE_BUILD_CHECKOUT_PATH}" >/dev/null
 
   local args=()
-  local force_zero_exit=" || true"
+  local force_zero_exit="true" # by default this plugin never fails
   if plugin_read_list_into_result BUILDKITE_PLUGIN_CODECOV_ARGS ; then
     for arg in "${result[@]}" ; do
       args+=("${arg}")
       if [[ "${arg}" == "-Z" ]]; then
-        force_zero_exit=""
+        force_zero_exit="false"
       fi
     done
   fi
 
   local ci_env
   ci_env=$(bash <(curl -s https://codecov.io/env))
+  set +e
+  local exit_code  
   docker run \
       $ci_env \
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
@@ -49,9 +51,14 @@ main() {
       -it \
       --rm \
       buildpack-deps:jessie-scm \
-      bash -c "bash <(curl -s https://codecov.io/bash) ${args[*]:-}${force_zero_exit}"
-
+      bash -c "bash <(curl -s https://codecov.io/bash) ${args[*]:-}"
+  exit_code="$?"
+  set -e
   popd >/dev/null
+
+  if [[ "${force_zero_exit}" != "true" ]]; then
+    exit "${exit_code}"
+  fi
 }
 
 main "$@"
