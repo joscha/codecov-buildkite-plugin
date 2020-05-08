@@ -22,6 +22,15 @@ steps:
             - '-F my_flag'
 ```
 
+In case you do not want to upload coverage results after a failed `command` step:
+
+```yml
+steps:
+  - plugins:
+      - joscha/codecov#v2.1.3:
+          skip_on_fail: true
+```
+
 ## Tests
 
 To run the tests of this plugin, run

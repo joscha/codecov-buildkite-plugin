@@ -8,4 +8,6 @@ configuration:
   properties:
     args:
       type: array
+    skip_on_fail:
+      type: boolean
   additionalProperties: false
