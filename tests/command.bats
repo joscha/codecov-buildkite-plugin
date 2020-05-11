@@ -56,6 +56,16 @@ setup() {
   assert_output --partial "Ran Codecov in docker"
 }
 
+@test "Post-command is skipped if command failed and skip_on_fail=true" {
+  export BUILDKITE_PLUGIN_CODECOV_SKIP_ON_FAIL=true
+  export BUILDKITE_COMMAND_EXIT_STATUS=123
+
+  run "$post_command_hook"
+
+  assert_success
+  assert_output "Codecov upload is skipped because step failed with status ${BUILDKITE_COMMAND_EXIT_STATUS}"
+}
+
 @test "Pre-exit succeeds" {
   cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
 
