@@ -63,7 +63,7 @@ setup() {
   run "$post_command_hook"
 
   assert_success
-  assert_output --partial "Codecov upload is skipped"
+  assert_output "~~~ Codecov upload is skipped because step failed with status ${BUILDKITE_COMMAND_EXIT_STATUS}"
 }
 
 @test "Pre-exit succeeds" {
