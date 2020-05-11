@@ -27,7 +27,7 @@ plugin_read_list_into_result() {
 
 main() {
   if [[ "${BUILDKITE_PLUGIN_CODECOV_SKIP_ON_FAIL:-false}" =~ ^(true|on|1)$ ]] && [[ "${BUILDKITE_COMMAND_EXIT_STATUS}" -ne 0 ]]; then
-    echo "~~~ Codecov upload is skipped because step failed with status ${BUILDKITE_COMMAND_EXIT_STATUS}"
+    echo "Codecov upload is skipped because step failed with status ${BUILDKITE_COMMAND_EXIT_STATUS}"
     exit 0
   fi
 
