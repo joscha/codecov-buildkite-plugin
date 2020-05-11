@@ -58,7 +58,7 @@ setup() {
 
 @test "Post-command is skipped if command failed and skip_on_fail=true" {
   export BUILDKITE_PLUGIN_CODECOV_SKIP_ON_FAIL=true
-  export BUILDKITE_COMMAND_EXIT_STATUS=1
+  export BUILDKITE_COMMAND_EXIT_STATUS=123
 
   run "$post_command_hook"
 
