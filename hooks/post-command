@@ -45,7 +45,8 @@ main() {
   fi
 
   local ci_env
-  ci_env=$(bash <(curl -s https://codecov.io/env))
+  ci_env=$(bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/env))
+
   set +e
   local exit_code  
   docker run \
@@ -56,7 +57,7 @@ main() {
       -it \
       --rm \
       buildpack-deps:jessie-scm \
-      bash -c "bash <(curl -s https://codecov.io/bash) ${args[*]:-}"
+      bash -c "bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/bash) ${args[*]:-}"
   exit_code="$?"
   set -e
   popd >/dev/null
