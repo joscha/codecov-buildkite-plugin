@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+
 # Reads a list from plugin config into a global result array
 # Returns success if values were read
 plugin_read_list_into_result() {
@@ -32,10 +34,10 @@ main() {
   fi
 
   curl -s https://codecov.io/bash > codecov;
+
   CODECOV_VERSION=$(grep 'VERSION=\".*\"' codecov | cut -d'"' -f2);
-  CODECOV_SHA=$(shasum -a 1 codecov)
+  CODECOV_SHA=$(sha1sum codecov)
   REMOTE_SHA=$(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/$CODECOV_VERSION/SHA1SUM)
-  rm codecov;
 
   if [[ "${CODECOV_SHA}" != "${REMOTE_SHA}" ]]; then
     echo "Codecov bash script SHA verification has failed!"
@@ -55,8 +57,6 @@ main() {
     done
   fi
 
-  DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-
   local ci_env
   ci_env=$(bash $DIR/../scripts/env)
 
@@ -67,13 +67,15 @@ main() {
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
       --workdir=/workdir \
       --volume=$(pwd):/workdir \
+      --volume=${DIR}/codecov:/codecov \
       -it \
       --rm \
       buildpack-deps:jessie-scm \
-      bash -c "bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/bash) ${args[*]:-}"
+      bash -c "bash /codecov ${args[*]:-}"
   exit_code="$?"
   set -e
   popd >/dev/null
+  rm codecov
 
   if [[ "${force_zero_exit}" != "true" ]]; then
     exit "${exit_code}"
