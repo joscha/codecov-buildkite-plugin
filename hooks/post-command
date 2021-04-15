@@ -31,8 +31,11 @@ main() {
     exit 0
   fi
 
-  CODECOV_SHA=$(curl -s https://codecov.io/bash | shasum -a 1 | awk '{ print $1 }')
-  REMOTE_SHA=$(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/master/SHA1SUM | awk '{ print $1 }')
+  curl -s https://codecov.io/bash > codecov;
+  CODECOV_VERSION=$(grep 'VERSION=\".*\"' codecov | cut -d'"' -f2);
+  CODECOV_SHA=$(shasum -a 1 codecov)
+  REMOTE_SHA=$(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/$CODECOV_VERSION/SHA1SUM)
+  rm codecov;
 
   if [[ "${CODECOV_SHA}" != "${REMOTE_SHA}" ]]; then
     echo "Codecov bash script SHA verification has failed!"
