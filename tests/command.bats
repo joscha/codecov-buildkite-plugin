@@ -67,6 +67,8 @@ setup() {
 }
 
 @test "Post-command is skipped if checksum match fails" {
+  cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
+
   stub sha1sum "codecov"
 
   run "$post_command_hook"
