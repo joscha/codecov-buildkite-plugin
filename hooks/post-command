@@ -55,8 +55,10 @@ main() {
     done
   fi
 
+  DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+
   local ci_env
-  ci_env=$(bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/env))
+  ci_env=$(bash $DIR/../scripts/env)
 
   set +e
   local exit_code
