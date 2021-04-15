@@ -32,9 +32,9 @@ main() {
   fi
 
   CODECOV_SHA=$(curl -s https://codecov.io/bash | shasum -a 1 | awk '{ print $1 }')
-  REMOVE_SHA=$(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/master/SHA1SUM | awk '{ print $1 }')
+  REMOTE_SHA=$(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/master/SHA1SUM | awk '{ print $1 }')
 
-  if [[ "${CODECOV_SHA}" != "${REMOVE_SHA}" ]]; then
+  if [[ "${CODECOV_SHA}" != "${REMOTE_SHA}" ]]; then
     echo "Codecov bash script SHA verification has failed!"
     exit 0
   fi
