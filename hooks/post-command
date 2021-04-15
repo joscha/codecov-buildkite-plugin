@@ -31,6 +31,14 @@ main() {
     exit 0
   fi
 
+  CODECOV_SHA=$(curl -s https://codecov.io/bash | shasum -a 1 | awk '{ print $1 }')
+  REMOVE_SHA=$(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/master/SHA1SUM | awk '{ print $1 }')
+
+  if [[ "${CODECOV_SHA}" != "${REMOVE_SHA}" ]]; then
+    echo "Codecov bash script SHA verification has failed!"
+    exit 0
+  fi
+
   pushd "${BUILDKITE_BUILD_CHECKOUT_PATH}" >/dev/null
 
   local args=()
@@ -48,7 +56,7 @@ main() {
   ci_env=$(bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/env))
 
   set +e
-  local exit_code  
+  local exit_code
   docker run \
       $ci_env \
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
