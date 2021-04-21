@@ -38,7 +38,7 @@ main() {
 
   CODECOV_VERSION=$(grep 'VERSION=\".*\"' codecov | cut -d'"' -f2);
 
-  if ! curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${CODECOV_VERSION}/SHA1SUM" | sha1sum -c -; then
+  if ! curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${CODECOV_VERSION}/SHA1SUM" | sha1sum -c - > /dev/null; then
     echo "Codecov SHA verification has failed!"
     exit 0
   fi
@@ -75,6 +75,7 @@ main() {
   set -e
   popd >/dev/null
   rm codecov
+  rm env
 
   if [[ "${force_zero_exit}" != "true" ]]; then
     exit "${exit_code}"
