@@ -33,15 +33,16 @@ main() {
     exit 0
   fi
 
-  curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 -o codecov https://codecov.io/bash;
+  mkdir "${DIR}/codecov-bash"
+  pushd "${DIR}/codecov-bash">/dev/null
+  curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 -o bash https://codecov.io/bash;
   curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 -o env https://codecov.io/env;
-
-  CODECOV_VERSION=$(grep 'VERSION=\".*\"' codecov | cut -d'"' -f2);
-
-  if ! curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${CODECOV_VERSION}/SHA1SUM" | sha1sum -c - > /dev/null; then
+  codecov_version=$(grep 'VERSION=\".*\"' codecov | cut -d'"' -f2);
+  if ! curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${codecov_version}/SHA1SUM" | sha1sum -c - > /dev/null; then
     echo "Codecov SHA verification has failed!"
-    exit 0
+    exit 1
   fi
+  popd >/dev/null
 
   pushd "${BUILDKITE_BUILD_CHECKOUT_PATH}" >/dev/null
 
@@ -57,7 +58,7 @@ main() {
   fi
 
   local ci_env
-  ci_env=$(bash $DIR/../env)
+  ci_env=$(bash ${DIR}/codecov-bash/env)
 
   set +e
   local exit_code
@@ -66,16 +67,15 @@ main() {
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
       --workdir=/workdir \
       --volume=$(pwd):/workdir \
-      --volume=${DIR}/codecov:/codecov \
+      --volume=${DIR}/codecov-bash:/codecov \
       -it \
       --rm \
       buildpack-deps:jessie-scm \
-      bash -c "bash /codecov ${args[*]:-}"
+      bash -c "bash /codecov/bash ${args[*]:-}"
   exit_code="$?"
   set -e
   popd >/dev/null
-  rm codecov
-  rm env
+  rm -r ${DIR}/codecov-bash
 
   if [[ "${force_zero_exit}" != "true" ]]; then
     exit "${exit_code}"
