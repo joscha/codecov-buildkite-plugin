@@ -3,8 +3,6 @@
 
 set -euo pipefail
 
-DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-
 # Reads a list from plugin config into a global result array
 # Returns success if values were read
 plugin_read_list_into_result() {
@@ -35,13 +33,17 @@ main() {
     exit 0
   fi
 
-  codecov_bash_dir="${DIR}/codecov"
+  codecov_bash_dir="/tmp/codecov-bash"
   mkdir -p "${codecov_bash_dir}"
   pushd "${codecov_bash_dir}" >/dev/null
   curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 -o codecov https://codecov.io/bash
   curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 -o env https://codecov.io/env
   codecov_version=$(grep 'VERSION=\".*\"' codecov | cut -d'"' -f2);
-  if ! curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${codecov_version}/SHA1SUM" | sha1sum -c - > /dev/null; then
+  sha1sum_file="${codecov_bash_dir}/${codecov_version}.sha1sum"
+  if [ ! -f "${sha1sum_file}" ]; then
+    curl -s -o "${sha1sum_file}" "https://raw.githubusercontent.com/codecov/codecov-bash/${codecov_version}/SHA1SUM"
+  fi
+  if ! sha1sum -c - < $sha1sum_file; then
     echo "Codecov SHA1 verification has failed!"
     exit 1
   fi
@@ -78,8 +80,6 @@ main() {
   exit_code="$?"
   set -e
   popd >/dev/null
-
-  rm -rf "${codecov_bash_dir}"
 
   if [[ "${force_zero_exit}" != "true" ]]; then
     exit "${exit_code}"
