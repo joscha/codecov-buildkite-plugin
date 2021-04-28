@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+
 set -euo pipefail
 
 DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
@@ -59,7 +61,7 @@ main() {
   fi
 
   local ci_env
-  ci_env=$(bash ${codecov_bash_dir}/env)
+  ci_env=$(bash "${codecov_bash_dir}/env")
 
   set +e
   local exit_code
@@ -67,7 +69,7 @@ main() {
       $ci_env \
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
       --workdir=/workdir \
-      --volume=$(pwd):/workdir \
+      --volume="$(pwd):/workdir" \
       --volume=${codecov_bash_dir}/codecov:/codecov \
       -it \
       --rm \
