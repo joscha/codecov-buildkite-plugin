@@ -21,7 +21,7 @@ setup() {
   cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
 
   stub docker \
-    "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/plugin/hooks/codecov:/codecov -it --rm buildpack-deps:jessie-scm bash -c 'bash /codecov ' : echo Ran Codecov in docker"
+    "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/plugin/hooks/codecov/codecov:/codecov -it --rm buildpack-deps:jessie-scm bash -c 'bash /codecov ' : echo Ran Codecov in docker"
 
   run "$post_command_hook"
 
@@ -35,7 +35,7 @@ setup() {
   export BUILDKITE_PLUGIN_CODECOV_ARGS_1="-F my_flag"
 
   stub docker \
-    "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/plugin/hooks/codecov:/codecov -it --rm buildpack-deps:jessie-scm bash -c 'bash /codecov -v -F my_flag' : echo Ran Codecov in docker"
+    "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/plugin/hooks/codecov/codecov:/codecov -it --rm buildpack-deps:jessie-scm bash -c 'bash /codecov -v -F my_flag' : echo Ran Codecov in docker"
 
   run "$post_command_hook"
 
@@ -48,7 +48,7 @@ setup() {
   export BUILDKITE_PLUGIN_CODECOV_ARGS_0="-Z"
 
   stub docker \
-    "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/plugin/hooks/codecov:/codecov -it --rm buildpack-deps:jessie-scm bash -c 'bash /codecov -Z' : echo Ran Codecov in docker"
+    "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/plugin/hooks/codecov/codecov:/codecov -it --rm buildpack-deps:jessie-scm bash -c 'bash /codecov -Z' : echo Ran Codecov in docker"
 
   run "$post_command_hook"
 
@@ -66,15 +66,15 @@ setup() {
   assert_output "Codecov upload is skipped because step failed with status ${BUILDKITE_COMMAND_EXIT_STATUS}"
 }
 
-@test "Post-command is skipped if checksum match fails" {
+@test "Post-command fails if checksum match fails" {
   cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
 
   stub sha1sum "-c - : exit 1"
 
   run "$post_command_hook"
 
-  assert_success
-  assert_output "Codecov SHA verification has failed!"
+  assert_failure
+  assert_output "Codecov SHA1 verification has failed!"
 }
 
 @test "Pre-exit succeeds" {

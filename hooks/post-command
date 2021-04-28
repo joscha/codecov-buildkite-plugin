@@ -33,13 +33,14 @@ main() {
     exit 0
   fi
 
-  mkdir "${DIR}/codecov-bash"
-  pushd "${DIR}/codecov-bash" >/dev/null
+  codecov_bash_dir="${DIR}/codecov"
+  mkdir -p "${codecov_bash_dir}"
+  pushd "${codecov_bash_dir}" >/dev/null
   curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 -o codecov https://codecov.io/bash
   curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 -o env https://codecov.io/env
   codecov_version=$(grep 'VERSION=\".*\"' codecov | cut -d'"' -f2);
   if ! curl -s "https://raw.githubusercontent.com/codecov/codecov-bash/${codecov_version}/SHA1SUM" | sha1sum -c - > /dev/null; then
-    echo "Codecov SHA verification has failed!"
+    echo "Codecov SHA1 verification has failed!"
     exit 1
   fi
   popd >/dev/null
@@ -58,7 +59,7 @@ main() {
   fi
 
   local ci_env
-  ci_env=$(bash ${DIR}/codecov-bash/env)
+  ci_env=$(bash ${codecov_bash_dir}/env)
 
   set +e
   local exit_code
@@ -67,7 +68,7 @@ main() {
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
       --workdir=/workdir \
       --volume=$(pwd):/workdir \
-      --volume=${DIR}/codecov-bash/codecov:/codecov \
+      --volume=${codecov_bash_dir}/codecov:/codecov \
       -it \
       --rm \
       buildpack-deps:jessie-scm \
@@ -75,7 +76,8 @@ main() {
   exit_code="$?"
   set -e
   popd >/dev/null
-  rm -r ${DIR}/codecov-bash
+
+  rm -rf "${codecov_bash_dir}"
 
   if [[ "${force_zero_exit}" != "true" ]]; then
     exit "${exit_code}"
