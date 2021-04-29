@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2086
+
 set -euo pipefail
 
 # Reads a list from plugin config into a global result array
@@ -31,6 +33,22 @@ main() {
     exit 0
   fi
 
+  codecov_bash_dir="/tmp/codecov-bash"
+  mkdir -p "${codecov_bash_dir}"
+  pushd "${codecov_bash_dir}" >/dev/null
+  curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 -o codecov https://codecov.io/bash
+  curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 -o env https://codecov.io/env
+  codecov_version=$(grep 'VERSION=\".*\"' codecov | cut -d'"' -f2);
+  sha1sum_file="${codecov_bash_dir}/${codecov_version}.sha1sum"
+  if [ ! -f "${sha1sum_file}" ]; then
+    curl -s -o "${sha1sum_file}" "https://raw.githubusercontent.com/codecov/codecov-bash/${codecov_version}/SHA1SUM"
+  fi
+  if ! sha1sum -c - < $sha1sum_file; then
+    echo "Codecov SHA1 verification has failed!"
+    exit 1
+  fi
+  popd >/dev/null
+
   pushd "${BUILDKITE_BUILD_CHECKOUT_PATH}" >/dev/null
 
   local args=()
@@ -45,19 +63,20 @@ main() {
   fi
 
   local ci_env
-  ci_env=$(bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/env))
+  ci_env=$(bash "${codecov_bash_dir}/env")
 
   set +e
-  local exit_code  
+  local exit_code
   docker run \
       $ci_env \
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
       --workdir=/workdir \
-      --volume=$(pwd):/workdir \
+      --volume="$(pwd):/workdir" \
+      --volume=${codecov_bash_dir}/codecov:/codecov \
       -it \
       --rm \
       buildpack-deps:jessie-scm \
-      bash -c "bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/bash) ${args[*]:-}"
+      bash -c "bash /codecov ${args[*]:-}"
   exit_code="$?"
   set -e
   popd >/dev/null
