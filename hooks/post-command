@@ -72,7 +72,7 @@ main() {
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
       --workdir=/workdir \
       --volume="$(pwd):/workdir" \
-      --volume=${codecov_bash_dir}/codecov:/codecov \
+      --volume="${codecov_bash_dir}/codecov:/codecov" \
       -it \
       --rm \
       buildpack-deps:jessie-scm \
