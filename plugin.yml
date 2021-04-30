@@ -4,6 +4,8 @@ author: https://github.com/joscha
 requirements:
   - bash
   - docker
+  - curl
+  - sha1sum
 configuration:
   properties:
     args:

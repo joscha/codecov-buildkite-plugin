@@ -4,3 +4,4 @@ services:
     image: buildkite/plugin-tester
     volumes:
       - ".:/plugin:ro"
+      - ".tmp/codecov-bash:/tmp/codecov-bash"
