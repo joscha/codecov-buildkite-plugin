@@ -75,7 +75,7 @@ main() {
       --volume=${codecov_bash_dir}/codecov:/codecov \
       -it \
       --rm \
-      ${BUILDKITE_PLUGIN_CODECOV_DOCKER_IMAGE} \
+      ${BUILDKITE_PLUGIN_CODECOV_DOCKER_IMAGE:-buildpack-deps:jessie-scm} \
       bash -c "bash /codecov ${args[*]:-}"
   exit_code="$?"
   set -e
