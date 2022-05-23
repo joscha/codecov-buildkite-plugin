@@ -47,6 +47,16 @@ main() {
   local ci_env
   ci_env=$(bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/env))
 
+  codecov_command=./codecov
+  apk add gnupg
+  curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
+  curl -Os https://uploader.codecov.io/latest/alpine/codecov
+  curl -Os https://uploader.codecov.io/latest/alpine/codecov.SHA256SUM
+  curl -Os https://uploader.codecov.io/latest/alpine/codecov.SHA256SUM.sig
+  gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
+  sha256sum -c codecov.SHA256SUM
+  chmod +x codecov
+
   set +e
   local exit_code  
   docker run \
@@ -57,7 +67,7 @@ main() {
       -it \
       --rm \
       buildpack-deps:jessie-scm \
-      bash -c "bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/bash) ${args[*]:-}"
+      bash -c "${codecov_command} ${args[*]:-}"
   exit_code="$?"
   set -e
   popd >/dev/null
