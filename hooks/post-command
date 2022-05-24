@@ -135,7 +135,7 @@ get_codecov_uploader() {
     curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
     curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
     gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-    shasum -a 256 -c codecov.SHA256SUM
+    sha256sum -c codecov.SHA256SUM
     chmod +x codecov
     return
   elif [ -n ${os_array[1]} ] && [ ${os_array[1]} = "macOS" ]; then
