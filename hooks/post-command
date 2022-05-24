@@ -45,37 +45,59 @@ get_os() {
 
   elif [ "${OS}" = "Linux" ] ; then
     KERNEL=$(uname -r)
-    if [ -f /etc/alpine-release ] ; then
+    if [ -f /etc/os-release ] ; then
+      DIST=$(grep '^NAME=' /etc/os-release | sed s/NAME=// | sed s/\"//g)
+      PSUEDONAME=$(grep '^VERSION_ID=' /etc/os-release | sed s/VERSION_ID=// | sed s/\"//g)
+      REV=$(grep '^VERSION=' /etc/os-release | sed s/VERSION=// | sed s/\"//g)
+      OSSTR="${OS} ${DIST} ${REV}(${PSUEDONAME} ${KERNEL} ${MACH})"
+      echo ${OSSTR}
+      return
+    elif [ -f /etc/alpine-release ] ; then
       DIST='Alpine'
       PSUEDONAME=$(sed s/.*\(// < /etc/alpine-release | sed s/\)//)
       REV=$(sed s/.*release\ // < /etc/alpine-release | sed s/\ .*//)
+      OSSTR="${OS} ${DIST} ${REV}(${PSUEDONAME} ${KERNEL} ${MACH})"
+      echo ${OSSTR}
+      return
     elif [ -f /etc/redhat-release ] ; then
       DIST='RedHat'
       PSUEDONAME=$(sed s/.*\(// < /etc/redhat-release | sed s/\)//)
       REV=$(sed s/.*release\ // < /etc/redhat-release | sed s/\ .*//)
+      OSSTR="${OS} ${DIST} ${REV}(${PSUEDONAME} ${KERNEL} ${MACH})"
+      echo ${OSSTR}
+      return
     elif [ -f /etc/SuSE-release ] ; then
       DIST=$(tr "\n" ' ' < /etc/SuSE-release | sed s/VERSION.*//)
       REV=$(tr "\n" ' ' < /etc/SuSE-release| sed s/.*=\ //)
+      OSSTR="${OS} ${DIST} ${REV}(${KERNEL} ${MACH})"
+      echo ${OSSTR}
+      return
     elif [ -f /etc/mandrake-release ] ; then
       DIST='Mandrake'
       PSUEDONAME=$(sed s/.*\(// < /etc/mandrake-release | sed s/\)//)
       REV=$(sed s/.*release\ // < /etc/mandrake-release | sed s/\ .*//)
+      OSSTR="${OS} ${DIST} ${REV}(${KERNEL} ${MACH})"
+      echo ${OSSTR}
+      return
     elif [ -f /etc/debian_version ] ; then
       if [ "$(awk -F= '/DISTRIB_ID/ {print $2}' /etc/lsb-release)" = "Ubuntu" ]; then
         DIST="Ubuntu"
       else
         DIST="Debian $(cat /etc/debian_version)"
-        REV=""
       fi
-    elif [ -f /etc/arch-release ] ; then
-      DIST="Arch"
+      OSSTR="${OS} ${DIST} (${KERNEL} ${MACH})"
+      echo ${OSSTR}
+      return
+    else
+      echo $(uname -a)
+      return
     fi
     if [ -f /etc/UnitedLinux-release ] ; then
       DIST="${DIST}[$(tr "\n" ' ' < /etc/UnitedLinux-release | sed s/VERSION.*//)]"
+      OSSTR="${OS} ${DIST}(${KERNEL} ${MACH})"
+      echo ${OSSTR}
+      return
     fi
-    OSSTR="${OS} ${DIST} ${REV}(${PSUEDONAME} ${KERNEL} ${MACH})"
-    echo ${OSSTR}
-    return
 
   elif [ "${OS}" == "Darwin" ]; then
     type -p sw_vers &>/dev/null
@@ -97,7 +119,7 @@ get_os() {
 get_codecov_uploader() {
   local os=$(get_os)
   local os_array=($os)
-  if [ ${os_array[1]} = "Alpine" ]; then
+  if [ -n ${os_array[1]} ] && [ ${os_array[1]} = "Alpine" ]; then
     apk add gnupg
     curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
     curl -Os https://uploader.codecov.io/latest/alpine/codecov
@@ -107,7 +129,7 @@ get_codecov_uploader() {
     sha256sum -c codecov.SHA256SUM
     chmod +x codecov
     return
-  elif [ ${os_array[0]} = "Linux" ]; then
+  elif [ -n ${os_array[0]} ] && [ ${os_array[0]} = "Linux" ]; then
     curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
     curl -Os https://uploader.codecov.io/latest/linux/codecov
     curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
@@ -116,7 +138,7 @@ get_codecov_uploader() {
     shasum -a 256 -c codecov.SHA256SUM
     chmod +x codecov
     return
-  elif [ ${os_array[1]} = "macOS" ]; then
+  elif [ -n ${os_array[1]} ] && [ ${os_array[1]} = "macOS" ]; then
     curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
     curl -Os https://uploader.codecov.io/latest/macos/codecov
     curl -Os https://uploader.codecov.io/latest/macos/codecov.SHA256SUM
@@ -128,8 +150,8 @@ get_codecov_uploader() {
   fi
 
   # Support for other OS such as windows will have to be implemented if needed
-  echo "Your platform ($os) is not supported."
-  exit 1
+    echo "Your platform ($os) is not supported."
+    exit 1
 }
 
 main() {
