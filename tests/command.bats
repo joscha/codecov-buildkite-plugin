@@ -1,6 +1,7 @@
 #!/usr/bin/env bats
 
 load '/usr/local/lib/bats/load.bash'
+load "$PWD/lib/utils.bash"
 
 tmp_dir=$(mktemp -d -t codecov-checkout.XXXXXXXXXX)
 post_command_hook="$PWD/hooks/post-command"
@@ -15,12 +16,10 @@ setup() {
   export BUILDKITE_BUILD_CHECKOUT_PATH=$tmp_dir
   export BUILDKITE_JOB_ID=0
   export BUILDKITE_COMMAND=my-command
-  export codecov_command=./codecov
+  export codecov_command="${TMP_DIR}/codecov"
 }
 
 @test "Post-command succeeds" {
-  cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
-
   stub docker \
     "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir -it --rm buildpack-deps:jessie-scm bash -c '${codecov_command} ' : echo Ran Codecov in docker"
 
@@ -31,7 +30,6 @@ setup() {
 }
 
 @test "Post-command succeeds with arguments" {
-  cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
   export BUILDKITE_PLUGIN_CODECOV_ARGS_0="-v"
   export BUILDKITE_PLUGIN_CODECOV_ARGS_1="-F my_flag"
 
@@ -45,7 +43,6 @@ setup() {
 }
 
 @test "Post-command succeeds with -Z" {
-  cd "$BUILDKITE_BUILD_CHECKOUT_PATH"
   export BUILDKITE_PLUGIN_CODECOV_ARGS_0="-Z"
 
   stub docker \

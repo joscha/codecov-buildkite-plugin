@@ -1,158 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Reads a list from plugin config into a global result array
-# Returns success if values were read
-plugin_read_list_into_result() {
-  result=()
-
-  for prefix in "$@" ; do
-    local i=0
-    local parameter="${prefix}_${i}"
-
-    if [[ -n "${!prefix:-}" ]] ; then
-      echo "🚨 Plugin received a string for $prefix, expected an array" >&2
-      exit 1
-    fi
-
-    while [[ -n "${!parameter:-}" ]]; do
-      result+=("${!parameter}")
-      i=$((i+1))
-      parameter="${prefix}_${i}"
-    done
-  done
-
-  [[ ${#result[@]} -gt 0 ]] || return 1
-}
-
-
-get_os() {
-  local OS=`uname -s`
-  local REV=`uname -r`
-  local MACH=`uname -m`
-
-  if [ "${OS}" = "SunOS" ] ; then
-    OS=Solaris
-    ARCH=$(uname -p)
-    OSSTR="${OS} ${REV}(${ARCH} $(uname -v)"
-    echo ${OSSTR}
-    return
-
-  elif [ "${OS}" = "AIX" ] ; then
-    OSSTR="${OS} $(oslevel) ($(oslevel -r)"
-    echo ${OSSTR}
-    return
-
-  elif [ "${OS}" = "Linux" ] ; then
-    KERNEL=$(uname -r)
-    if [ -f /etc/os-release ] ; then
-      DIST=$(grep '^NAME=' /etc/os-release | sed s/NAME=// | sed s/\"//g)
-      PSUEDONAME=$(grep '^VERSION_ID=' /etc/os-release | sed s/VERSION_ID=// | sed s/\"//g)
-      REV=$(grep '^VERSION=' /etc/os-release | sed s/VERSION=// | sed s/\"//g)
-      OSSTR="${OS} ${DIST} ${REV}(${PSUEDONAME} ${KERNEL} ${MACH})"
-      echo ${OSSTR}
-      return
-    elif [ -f /etc/alpine-release ] ; then
-      DIST='Alpine'
-      PSUEDONAME=$(sed s/.*\(// < /etc/alpine-release | sed s/\)//)
-      REV=$(sed s/.*release\ // < /etc/alpine-release | sed s/\ .*//)
-      OSSTR="${OS} ${DIST} ${REV}(${PSUEDONAME} ${KERNEL} ${MACH})"
-      echo ${OSSTR}
-      return
-    elif [ -f /etc/redhat-release ] ; then
-      DIST='RedHat'
-      PSUEDONAME=$(sed s/.*\(// < /etc/redhat-release | sed s/\)//)
-      REV=$(sed s/.*release\ // < /etc/redhat-release | sed s/\ .*//)
-      OSSTR="${OS} ${DIST} ${REV}(${PSUEDONAME} ${KERNEL} ${MACH})"
-      echo ${OSSTR}
-      return
-    elif [ -f /etc/SuSE-release ] ; then
-      DIST=$(tr "\n" ' ' < /etc/SuSE-release | sed s/VERSION.*//)
-      REV=$(tr "\n" ' ' < /etc/SuSE-release| sed s/.*=\ //)
-      OSSTR="${OS} ${DIST} ${REV}(${KERNEL} ${MACH})"
-      echo ${OSSTR}
-      return
-    elif [ -f /etc/mandrake-release ] ; then
-      DIST='Mandrake'
-      PSUEDONAME=$(sed s/.*\(// < /etc/mandrake-release | sed s/\)//)
-      REV=$(sed s/.*release\ // < /etc/mandrake-release | sed s/\ .*//)
-      OSSTR="${OS} ${DIST} ${REV}(${KERNEL} ${MACH})"
-      echo ${OSSTR}
-      return
-    elif [ -f /etc/debian_version ] ; then
-      if [ "$(awk -F= '/DISTRIB_ID/ {print $2}' /etc/lsb-release)" = "Ubuntu" ]; then
-        DIST="Ubuntu"
-      else
-        DIST="Debian $(cat /etc/debian_version)"
-      fi
-      OSSTR="${OS} ${DIST} (${KERNEL} ${MACH})"
-      echo ${OSSTR}
-      return
-    else
-      echo $(uname -a)
-      return
-    fi
-    if [ -f /etc/UnitedLinux-release ] ; then
-      DIST="${DIST}[$(tr "\n" ' ' < /etc/UnitedLinux-release | sed s/VERSION.*//)]"
-      OSSTR="${OS} ${DIST}(${KERNEL} ${MACH})"
-      echo ${OSSTR}
-      return
-    fi
-
-  elif [ "${OS}" == "Darwin" ]; then
-    type -p sw_vers &>/dev/null
-    [ $? -eq 0 ] && {
-      OS=`sw_vers | grep 'ProductName' | cut -f 2`
-      VER=`sw_vers | grep 'ProductVersion' | cut -f 2`
-      BUILD=`sw_vers | grep 'BuildVersion' | cut -f 2`
-      OSSTR="Darwin ${OS} ${VER} ${BUILD}"
-    } || {
-      OSSTR="MacOSX"
-    }
-    echo ${OSSTR}
-    return
-  fi
-
-  echo $(uname -a)
-}
-
-get_codecov_uploader() {
-  local os=$(get_os)
-  local os_array=($os)
-  if [ -n ${os_array[1]} ] && [ ${os_array[1]} = "Alpine" ]; then
-    apk add gnupg
-    curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
-    curl -Os https://uploader.codecov.io/latest/alpine/codecov
-    curl -Os https://uploader.codecov.io/latest/alpine/codecov.SHA256SUM
-    curl -Os https://uploader.codecov.io/latest/alpine/codecov.SHA256SUM.sig
-    gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-    sha256sum -c codecov.SHA256SUM
-    chmod +x codecov
-    return
-  elif [ -n ${os_array[0]} ] && [ ${os_array[0]} = "Linux" ]; then
-    curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
-    curl -Os https://uploader.codecov.io/latest/linux/codecov
-    curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
-    curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
-    gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-    sha256sum -c codecov.SHA256SUM
-    chmod +x codecov
-    return
-  elif [ -n ${os_array[1]} ] && [ ${os_array[1]} = "macOS" ]; then
-    curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
-    curl -Os https://uploader.codecov.io/latest/macos/codecov
-    curl -Os https://uploader.codecov.io/latest/macos/codecov.SHA256SUM
-    curl -Os https://uploader.codecov.io/latest/macos/codecov.SHA256SUM.sig
-    gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-    shasum -a 256 -c codecov.SHA256SUM
-    chmod +x codecov
-    return
-  fi
-
-  # Support for other OS such as windows will have to be implemented if needed
-    echo "Your platform ($os) is not supported."
-    exit 1
-}
+source ./lib/utils.bash
 
 main() {
   if [[ "${BUILDKITE_PLUGIN_CODECOV_SKIP_ON_FAIL:-false}" =~ ^(true|on|1)$ ]] && [[ "${BUILDKITE_COMMAND_EXIT_STATUS}" -ne 0 ]]; then
@@ -176,11 +25,11 @@ main() {
   local ci_env
   ci_env=$(bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/env))
 
-  codecov_command=./codecov
+  codecov_command="${TMP_DIR}/codecov"
   get_codecov_uploader
 
   set +e
-  local exit_code  
+  local exit_code
   docker run \
       $ci_env \
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
