@@ -1,7 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-source ./lib/utils.bash
+script_path="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+source "${script_path}/../lib/utils.bash"
 
 main() {
   if [[ "${BUILDKITE_PLUGIN_CODECOV_SKIP_ON_FAIL:-false}" =~ ^(true|on|1)$ ]] && [[ "${BUILDKITE_COMMAND_EXIT_STATUS}" -ne 0 ]]; then
