@@ -1,7 +1,6 @@
 #!/usr/bin/env bats
 
 load '/usr/local/lib/bats/load.bash'
-load "$PWD/lib/utils.bash"
 
 tmp_dir=$(mktemp -d -t codecov-checkout.XXXXXXXXXX)
 post_command_hook="$PWD/hooks/post-command"
@@ -16,8 +15,7 @@ setup() {
   export BUILDKITE_BUILD_CHECKOUT_PATH=$tmp_dir
   export BUILDKITE_JOB_ID=0
   export BUILDKITE_COMMAND=my-command
-  export codecov_command="${TMP_DIR}/codecov"
-  stub git "rev-parse --show-toplevel : echo $PWD"
+  export codecov_command="/tmp/codecov-buildkite-plugin/alpine/latest/codecov"
 }
 
 @test "Post-command succeeds" {
