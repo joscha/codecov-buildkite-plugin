@@ -5,7 +5,6 @@ requirements:
   - bash
   - docker
   - gpg
-  - git
 configuration:
   properties:
     args:
