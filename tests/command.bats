@@ -17,6 +17,7 @@ setup() {
   export BUILDKITE_JOB_ID=0
   export BUILDKITE_COMMAND=my-command
   export codecov_command="${TMP_DIR}/codecov"
+  stub git "rev-parse --show-toplevel : echo $PWD"
 }
 
 @test "Post-command succeeds" {
