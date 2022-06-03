@@ -1,41 +1,46 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-get_os() {
-  local OS=`uname -s`
+error() {
+  >&2 echo "$*"
+  exit 1
+}
 
-  if [ "${OS}" = "Linux" ] ; then
-    if [ -f /etc/alpine-release ] ; then
+print_os() {
+  local OS
+  OS=$(uname -s)
+
+  if [[ "${OS}" = "Linux" ]] ; then
+    if [[ -f /etc/alpine-release ]] ; then
       echo "alpine"
       return
     fi
     echo "linux"
     return
 
-  elif [ "${OS}" == "Darwin" ]; then
+  elif [[ "${OS}" == "Darwin" ]]; then
     echo "macos"
     return
   fi
 
-  echo $(uname -a)
+  echo "${OS}"
 }
 
-OS=$(get_os)
+OS=$(print_os)
 CODECOV_VERSION="${BUILDKITE_PLUGIN_CODECOV_UPLOADER_VERSION:-latest}"
 TMP_DIR="${BUILDKITE_PLUGIN_CODECOV_TMP_DIR:-/tmp}/codecov-buildkite-plugin/${OS}/${CODECOV_VERSION}"
 
 # Reads a list from plugin config into a global result array
 # Returns success if values were read
 plugin_read_list_into_result() {
-  result=()
+  local result=()
 
   for prefix in "$@" ; do
     local i=0
     local parameter="${prefix}_${i}"
 
     if [[ -n "${!prefix:-}" ]] ; then
-      echo "🚨 Plugin received a string for $prefix, expected an array" >&2
-      exit 1
+      error "🚨 Plugin received a string for $prefix, expected an array"
     fi
 
     while [[ -n "${!parameter:-}" ]]; do
@@ -49,42 +54,60 @@ plugin_read_list_into_result() {
 }
 
 get_codecov_uploader() {
-  if [ "${OS}" = "alpine" ] || [ "${OS}" = "linux" ] || [ "${OS}" = "macos" ]; then
-    if [ "${OS}" = "alpine" ]; then
-      apk add gnupg
-    fi
-    curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --no-default-keyring --keyring trustedkeys.gpg --import # One-time step
-    for file in codecov codecov.SHA256SUM codecov.SHA256SUM.sig
-    do
-      if [[ ! -e "${TMP_DIR}/${file}" ]]; then
-        echo "${TMP_DIR}/${file}"
-        echo "https://uploader.codecov.io/${CODECOV_VERSION}/${OS}/${file}"
-        curl -s --create-dirs -o "${TMP_DIR}/${file}" "https://uploader.codecov.io/${CODECOV_VERSION}/${OS}/${file}"
-      fi
-    done
+  case "${OS}" in
+    alpine|linux|macos)
+      # We support these
+      ;;
+    *)
+      error "Your platform (${OS}) is not supported."
+      ;;
+  esac
 
-    (
-      cd "${TMP_DIR}"
-      gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
-      if [ "${OS}" = "macos" ]; then
-        shasum -a 256 -c codecov.SHA256SUM
-      else
-        sha256sum -c codecov.SHA256SUM
-      fi
-      chmod +x codecov
-    )
-    return
+  if [[ "${OS}" = "alpine" ]]; then
+    apk add gnupg
   fi
 
-  # Support for other OS such as windows will have to be implemented if needed
-  echo "Your platform (${OS}) is not supported."
-  exit 1
+  # One-time step
+  curl \
+      -fSs \
+      --retry 5 \
+      https://keybase.io/codecovsecurity/pgp_keys.asc \
+      | gpg \
+          --no-default-keyring \
+          --keyring trustedkeys.gpg \
+          --import
+  local file
+  for file in codecov codecov.SHA256SUM codecov.SHA256SUM.sig
+  do
+    local local_path="${TMP_DIR}/${file}"
+    if [[ ! -e "${local_path}" ]]; then
+      >&2 echo "Local path will be: ${local_path}"
+      local remote_source="https://uploader.codecov.io/${CODECOV_VERSION}/${OS}/${file}"
+      >&2 echo "Source is: ${remote_source}"
+      curl \
+          -fSs \
+          --create-dirs \
+          -o "${local_path}" \
+          "${remote_source}"
+    fi
+  done
+
+  (
+    pushd "${TMP_DIR}" >/dev/null
+    gpgv codecov.SHA256SUM.sig codecov.SHA256SUM
+    if [[ "${OS}" = "macos" ]]; then
+      shasum -a 256 -c codecov.SHA256SUM
+    else
+      sha256sum -c codecov.SHA256SUM
+    fi
+    chmod +x codecov
+    popd >/dev/null
+  )
 }
 
 main() {
   if [[ "${BUILDKITE_PLUGIN_CODECOV_SKIP_ON_FAIL:-false}" =~ ^(true|on|1)$ ]] && [[ "${BUILDKITE_COMMAND_EXIT_STATUS}" -ne 0 ]]; then
-    echo "Codecov upload is skipped because step failed with status ${BUILDKITE_COMMAND_EXIT_STATUS}"
-    exit 0
+    error "Codecov upload is skipped because step failed with status ${BUILDKITE_COMMAND_EXIT_STATUS}"
   fi
 
   pushd "${BUILDKITE_BUILD_CHECKOUT_PATH}" >/dev/null
@@ -103,16 +126,17 @@ main() {
   local ci_env
   ci_env=$(bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/env))
 
-  codecov_command="${TMP_DIR}/codecov"
+  local codecov_command="${TMP_DIR}/codecov"
   get_codecov_uploader
 
   set +e
   local exit_code
+  # shellcheck disable=SC2086
   docker run \
       $ci_env \
       --label "com.buildkite.job-id=${BUILDKITE_JOB_ID}" \
       --workdir=/workdir \
-      --volume=$(pwd):/workdir \
+      --volume="$(pwd)":/workdir \
       --volume=/tmp:/tmp \
       -it \
       --rm \
