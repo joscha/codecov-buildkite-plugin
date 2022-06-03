@@ -6,7 +6,6 @@ requirements:
   - docker
   - gpg
   - curl
-  - shasum
 configuration:
   properties:
     args:
