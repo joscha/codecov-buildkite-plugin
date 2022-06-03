@@ -33,7 +33,7 @@ TMP_DIR="${BUILDKITE_PLUGIN_CODECOV_TMP_DIR:-/tmp}/codecov-buildkite-plugin/${OS
 # Reads a list from plugin config into a global result array
 # Returns success if values were read
 plugin_read_list_into_result() {
-  local result=()
+  result=()
 
   for prefix in "$@" ; do
     local i=0
