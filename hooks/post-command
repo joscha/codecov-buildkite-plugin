@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-error() {
+debug() {
   >&2 echo "$*"
+}
+
+error() {
+  debug "$@"
   exit 1
 }
 
@@ -107,7 +111,8 @@ get_codecov_uploader() {
 
 main() {
   if [[ "${BUILDKITE_PLUGIN_CODECOV_SKIP_ON_FAIL:-false}" =~ ^(true|on|1)$ ]] && [[ "${BUILDKITE_COMMAND_EXIT_STATUS}" -ne 0 ]]; then
-    error "Codecov upload is skipped because step failed with status ${BUILDKITE_COMMAND_EXIT_STATUS}"
+    debug "Codecov upload is skipped because step failed with status ${BUILDKITE_COMMAND_EXIT_STATUS}"
+    exit 0
   fi
 
   pushd "${BUILDKITE_BUILD_CHECKOUT_PATH}" >/dev/null
