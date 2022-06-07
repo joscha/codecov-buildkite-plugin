@@ -16,4 +16,6 @@ configuration:
       type: string
     tmp_dir:
       type: string
+    docker_image:
+      type: string
   additionalProperties: false

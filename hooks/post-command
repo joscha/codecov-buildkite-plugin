@@ -145,7 +145,7 @@ main() {
       --volume=/tmp:/tmp \
       -it \
       --rm \
-      buildpack-deps:jessie-scm \
+      ${BUILDKITE_PLUGIN_CODECOV_DOCKER_IMAGE:-buildpack-deps:jessie-scm} \
       bash -c "${codecov_command} ${args[*]:-}"
   exit_code="$?"
   set -e
