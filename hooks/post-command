@@ -85,9 +85,9 @@ get_codecov_uploader() {
   do
     local local_path="${TMP_DIR}/${file}"
     if [[ ! -e "${local_path}" ]]; then
-      >&2 echo "Local path will be: ${local_path}"
+      debug "Local path will be: ${local_path}"
       local remote_source="https://uploader.codecov.io/${CODECOV_VERSION}/${OS}/${file}"
-      >&2 echo "Source is: ${remote_source}"
+      debug "Source is: ${remote_source}"
       curl \
           -fSs \
           --create-dirs \
