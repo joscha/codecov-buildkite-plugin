@@ -9,14 +9,14 @@ It contains a [post-command hook](hooks/command), and [tests](tests/command.bats
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v2.1.6: ~
+      - joscha/codecov#v3.0.0: ~
 ```
 
 The shell option can be used to forward parameters to the codecov invocation.
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v2.1.6:
+      - joscha/codecov#v3.0.0:
           args:
             - '-v'
             - '-F my_flag'
@@ -27,7 +27,7 @@ In case you do not want to upload coverage results after a failed `command` step
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v2.1.6:
+      - joscha/codecov#v3.0.0:
           skip_on_fail: true
 ```
 
