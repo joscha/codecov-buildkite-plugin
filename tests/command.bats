@@ -41,6 +41,18 @@ setup() {
   assert_output --partial "Ran Codecov in docker"
 }
 
+@test "Post-command succeeds with custom docker image" {
+  export BUILDKITE_PLUGIN_CODECOV_DOCKER_IMAGE="my/library/buildpack-deps:jessie-scm"
+
+  stub docker \
+    "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/tmp:/tmp -it --rm my/library/buildpack-deps:jessie-scm bash -c '${codecov_command} ' : echo Ran Codecov in docker"
+
+  run "$post_command_hook"
+
+  assert_success
+  assert_output --partial "Ran Codecov in docker"
+}
+
 @test "Post-command succeeds with -Z" {
   export BUILDKITE_PLUGIN_CODECOV_ARGS_0="-Z"
 
