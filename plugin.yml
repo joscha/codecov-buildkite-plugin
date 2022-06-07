@@ -4,10 +4,16 @@ author: https://github.com/joscha
 requirements:
   - bash
   - docker
+  - gpg
+  - curl
 configuration:
   properties:
     args:
       type: array
     skip_on_fail:
       type: boolean
+    uploader_version:
+      type: string
+    tmp_dir:
+      type: string
   additionalProperties: false
