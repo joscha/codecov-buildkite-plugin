@@ -14,6 +14,8 @@ configuration:
       type: boolean
     uploader_version:
       type: string
+    pgp_public_key_url:
+      type: string
     tmp_dir:
       type: string
     docker_image:
