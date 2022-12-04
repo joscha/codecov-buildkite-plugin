@@ -72,14 +72,26 @@ get_codecov_uploader() {
   fi
 
   # One-time step
-  curl \
-      -fSs \
-      --retry 5 \
-      https://keybase.io/codecovsecurity/pgp_keys.asc \
+  if [[ "${BUILDKITE_PLUGIN_CODECOV_PGP_PUBLIC_KEY_URL-"false"}" = "" ]]; then
+    debug "Importing bundled Codecov's PGP public key : $(pwd)/pgp_keys.asc" 
+    cat "$(pwd)/pgp_keys.asc" \
       | gpg \
           --no-default-keyring \
           --keyring trustedkeys.gpg \
           --import
+  else
+    local codecov_pgp_public_key_url="${BUILDKITE_PLUGIN_CODECOV_PGP_PUBLIC_KEY_URL-"https://keybase.io/codecovsecurity/pgp_keys.asc"}"
+    debug "Downloading and importing Codecov's PGP public key from : ${codecov_pgp_public_key_url}"
+    curl \
+        -fSs \
+        --retry 5 \
+        "${codecov_pgp_public_key_url}" \
+        | gpg \
+            --no-default-keyring \
+            --keyring trustedkeys.gpg \
+            --import
+  fi
+
   local file
   for file in codecov codecov.SHA256SUM codecov.SHA256SUM.sig
   do

@@ -13,6 +13,7 @@ trap cleanup EXIT
 
 setup() {
   export BUILDKITE_BUILD_CHECKOUT_PATH=$tmp_dir
+  cp ./pgp_keys.asc $tmp_dir
   export BUILDKITE_JOB_ID=0
   export BUILDKITE_COMMAND=my-command
   export codecov_command="/tmp/codecov-buildkite-plugin/alpine/latest/codecov"
@@ -46,6 +47,30 @@ setup() {
 
   stub docker \
     "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/tmp:/tmp -it --rm my/library/buildpack-deps:jessie-scm bash -c '${codecov_command} ' : echo Ran Codecov in docker"
+
+  run "$post_command_hook"
+
+  assert_success
+  assert_output --partial "Ran Codecov in docker"
+}
+
+@test "Post-command succeeds with custom PGP public key URL" {
+  export BUILDKITE_PLUGIN_CODECOV_PGP_PUBLIC_KEY_URL="https://keybase.io/codecovsecurity/pgp_keys.asc"
+
+  stub docker \
+    "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/tmp:/tmp -it --rm buildpack-deps:jessie-scm bash -c '${codecov_command} ' : echo Ran Codecov in docker"
+
+  run "$post_command_hook"
+
+  assert_success
+  assert_output --partial "Ran Codecov in docker"
+}
+
+@test "Post-command succeeds with empty PGP public key URL" {
+  export BUILDKITE_PLUGIN_CODECOV_PGP_PUBLIC_KEY_URL=""
+
+  stub docker \
+    "run -e CODECOV_ENV -e CODECOV_TOKEN -e CODECOV_URL -e CODECOV_SLUG -e VCS_COMMIT_ID -e VCS_BRANCH_NAME -e VCS_PULL_REQUEST -e VCS_SLUG -e VCS_TAG -e CI_BUILD_URL -e CI_BUILD_ID -e CI_JOB_ID --label com.buildkite.job-id=${BUILDKITE_JOB_ID} --workdir=/workdir --volume=${BUILDKITE_BUILD_CHECKOUT_PATH}:/workdir --volume=/tmp:/tmp -it --rm buildpack-deps:jessie-scm bash -c '${codecov_command} ' : echo Ran Codecov in docker"
 
   run "$post_command_hook"
 
