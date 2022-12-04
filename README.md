@@ -9,14 +9,14 @@ It contains a [post-command hook](hooks/command), and [tests](tests/command.bats
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v3.0.0: ~
+      - joscha/codecov#v3.1.0: ~
 ```
 
 The shell option can be used to forward parameters to the codecov invocation.
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v3.0.0:
+      - joscha/codecov#v3.1.0:
           args:
             - '-v'
             - '-F my_flag'
@@ -27,9 +27,20 @@ In case you do not want to upload coverage results after a failed `command` step
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v3.0.0:
+      - joscha/codecov#v3.1.0:
           skip_on_fail: true
 ```
+
+By default it will use the bundled PGP key to verify the downloaded binary, but you can override the URL via:
+
+
+```yml
+steps:
+  - plugins:
+      - joscha/codecov#v3.1.0:
+          pgp_public_key_url: https://keybase.io/codecovsecurity/pgp_keys.asc
+```
+
 
 ## Tests
 
