@@ -1,7 +1,7 @@
 steps:
   - label: "🤡 :hammer:"
     plugins:
-      - docker-compose#v4.10.1:
+      - docker-compose#v5.2.0:
           run: tests
   - label: ":sparkles: lint"
     plugins:
