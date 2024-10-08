@@ -12,7 +12,7 @@ configuration:
       type: array
     skip_on_fail:
       type: boolean
-    uploader_version:
+    cli_version:
       type: string
     pgp_public_key_url:
       type: string
