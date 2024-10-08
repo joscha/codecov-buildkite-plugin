@@ -5,7 +5,7 @@ steps:
           run: tests
   - label: ":sparkles: lint"
     plugins:
-      - plugin-linter#v3.1.0:
+      - plugin-linter#v3.3.0:
           id: joscha/codecov
   - label: ":shell: Shellcheck"
     plugins:
