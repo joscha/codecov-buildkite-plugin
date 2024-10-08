@@ -13,10 +13,19 @@ error() {
 print_os() {
   local OS
   OS=$(uname -s)
+  ARCH=$(uname -m)
 
   if [[ "${OS}" = "Linux" ]] ; then
     if [[ -f /etc/alpine-release ]] ; then
+      if [[ "${ARCH}" = "aarch64" ]] ; then
+        echo "alpine-arm64"
+        return
+      fi
       echo "alpine"
+      return
+    fi
+    if [[ "${ARCH}" = "aarch64" ]] ; then
+      echo "linux-arm64"
       return
     fi
     echo "linux"
@@ -31,7 +40,7 @@ print_os() {
 }
 
 OS=$(print_os)
-CODECOV_VERSION="${BUILDKITE_PLUGIN_CODECOV_UPLOADER_VERSION:-latest}"
+CODECOV_VERSION="${BUILDKITE_PLUGIN_CODECOV_CLI_VERSION:-latest}"
 TMP_DIR="${BUILDKITE_PLUGIN_CODECOV_TMP_DIR:-/tmp}/codecov-buildkite-plugin/${OS}/${CODECOV_VERSION}"
 
 # Reads a list from plugin config into a global result array
@@ -57,9 +66,9 @@ plugin_read_list_into_result() {
   [[ ${#result[@]} -gt 0 ]] || return 1
 }
 
-get_codecov_uploader() {
+get_codecov_cli() {
   case "${OS}" in
-    alpine|linux|macos)
+    alpine|alpine-64|linux|linux-64|macos)
       # We support these
       ;;
     *)
@@ -67,7 +76,7 @@ get_codecov_uploader() {
       ;;
   esac
 
-  if [[ "${OS}" = "alpine" ]]; then
+  if [[ "${OS}" = "alpine" || "${OS}" = "alpine-64" ]]; then
     apk add gnupg
   fi
 
@@ -98,7 +107,7 @@ get_codecov_uploader() {
     local local_path="${TMP_DIR}/${file}"
     if [[ ! -e "${local_path}" ]]; then
       debug "Local path will be: ${local_path}"
-      local remote_source="https://uploader.codecov.io/${CODECOV_VERSION}/${OS}/${file}"
+      local remote_source="https://cli.codecov.io/${CODECOV_VERSION}/${OS}/${file}"
       debug "Source is: ${remote_source}"
       curl \
           -fSs \
@@ -144,7 +153,7 @@ main() {
   ci_env=$(bash <(curl -s -S --connect-timeout 10 --retry 3 --retry-delay 10 https://codecov.io/env))
 
   local codecov_command="${TMP_DIR}/codecov"
-  get_codecov_uploader
+  get_codecov_cli
 
   set +e
   local exit_code
