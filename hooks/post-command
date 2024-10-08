@@ -68,7 +68,7 @@ plugin_read_list_into_result() {
 
 get_codecov_cli() {
   case "${OS}" in
-    alpine|alpine-64|linux|linux-64|macos)
+    alpine|alpine-arm64|linux|linux-arm64|macos)
       # We support these
       ;;
     *)

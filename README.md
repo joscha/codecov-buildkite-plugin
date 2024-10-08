@@ -9,17 +9,18 @@ It contains a [post-command hook](hooks/command), and [tests](tests/command.bats
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v3.1.0: ~
+      - joscha/codecov#v4.0.1: ~
 ```
 
 The shell option can be used to forward parameters to the codecov invocation.
+
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v3.1.0:
+      - joscha/codecov#v4.0.1:
           args:
-            - '-v'
-            - '-F my_flag'
+            - "-v"
+            - "-F my_flag"
 ```
 
 In case you do not want to upload coverage results after a failed `command` step:
@@ -27,26 +28,43 @@ In case you do not want to upload coverage results after a failed `command` step
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v3.1.0:
+      - joscha/codecov#v4.0.1:
           skip_on_fail: true
 ```
 
 By default it will use the bundled PGP key to verify the downloaded binary, but you can override the URL via:
 
+```yml
+steps:
+  - plugins:
+      - joscha/codecov#v4.0.1:
+          pgp_public_key_url: https://keybase.io/codecovsecurity/pgp_keys.asc
+```
+
+Here's a complete example:
 
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v3.1.0:
-          pgp_public_key_url: https://keybase.io/codecovsecurity/pgp_keys.asc
+    joscha/codecov#v4.0.1:
+      skip_on_fail: true
+      args:
+        - "--auto-load-params-from=Buildkite"
+        - "--verbose"
+        - "upload-process"
+        - "-F $$BUILDKITE_JOB_ID" # $$ if you have parallel steps (to get the runtime value) otherwise $
+        - "-r $BUILDKITE_ORGANIZATION_SLUG/$BUILDKITE_PIPELINE_NAME"
+        - "--git-service=$BUILDKITE_PIPELINE_PROVIDER"
+      docker_image: "public.ecr.aws/docker/library/buildpack-deps:noble-scm"
+      cli_version: v0.7.5
 ```
-
 
 ## Tests
 
 To run the tests of this plugin, run
+
 ```sh
-docker-compose run --rm tests
+docker compose run --rm tests
 ```
 
 ## License
