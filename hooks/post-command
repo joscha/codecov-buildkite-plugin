@@ -82,7 +82,8 @@ get_codecov_cli() {
 
   # One-time step
   if [[ "${BUILDKITE_PLUGIN_CODECOV_PGP_PUBLIC_KEY_URL-"false"}" = "" ]]; then
-    local pgp_key_path=$(find "${BUILDKITE_PLUGINS_PATH}" -name pgp_keys.asc | grep codecov-buildkite-plugin | head -1)
+    local pgp_key_path
+    pgp_key_path=$(find "${BUILDKITE_PLUGINS_PATH}" -name pgp_keys.asc | grep codecov-buildkite-plugin | head -1)
     if [[ -z "${pgp_key_path}" ]]; then
       error "Codecov's PGP public key not found in ${BUILDKITE_PLUGINS_PATH}"
     fi
