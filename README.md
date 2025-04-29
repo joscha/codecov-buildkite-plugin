@@ -9,7 +9,7 @@ It contains a [post-command hook](hooks/command), and [tests](tests/command.bats
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v4.0.1: ~
+      - joscha/codecov#v4.0.2: ~
 ```
 
 The shell option can be used to forward parameters to the codecov invocation.
@@ -17,7 +17,7 @@ The shell option can be used to forward parameters to the codecov invocation.
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v4.0.1:
+      - joscha/codecov#v4.0.2:
           args:
             - "-v"
             - "-F my_flag"
@@ -28,25 +28,27 @@ In case you do not want to upload coverage results after a failed `command` step
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v4.0.1:
+      - joscha/codecov#v4.0.2:
           skip_on_fail: true
 ```
 
-By default it will use the bundled PGP key to verify the downloaded binary, but you can override the URL via:
+By default it will download the PGP key from https://keybase.io/codecovsecurity/pgp_keys.asc and use that to verify the downloaded binary, but you can override the URL via:
 
 ```yml
 steps:
   - plugins:
-      - joscha/codecov#v4.0.1:
-          pgp_public_key_url: https://keybase.io/codecovsecurity/pgp_keys.asc
+      - joscha/codecov#v4.0.2:
+          pgp_public_key_url: https://url/to/pgp_keys.asc
 ```
+
+Hint: Use `pgp_public_key_url: ''` to use the [bundled](./pgp_keys.asc) PGP key.
 
 Here's a complete example:
 
 ```yml
 steps:
   - plugins:
-    joscha/codecov#v4.0.1:
+    joscha/codecov#v4.0.2:
       skip_on_fail: true
       args:
         - "--auto-load-params-from=Buildkite"
